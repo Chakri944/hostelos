@@ -1,0 +1,10 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+hostelos.db
+hostelos.db-shm
+hostelos.db-wal
+backups/
+restore_upload.tmp

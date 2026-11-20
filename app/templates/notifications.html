@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">AUTOMATION CENTRE</p><h1>Rent reminders</h1><p class="muted">WhatsApp reminders run automatically every day at 9:00 AM (India time).</p></div></div>
+<div class="stats-grid">
+  <div class="stat-card"><span>Sent</span><strong>{{ stats.sent }}</strong></div>
+  <div class="stat-card"><span>Failed</span><strong>{{ stats.failed }}</strong></div>
+  <div class="stat-card"><span>Queued</span><strong>{{ stats.queued }}</strong></div>
+</div>
+<div class="content-grid">
+<section class="panel">
+ <div class="panel-heading"><div><h2>Reminder schedule</h2><p class="muted">Defaults are editable. A paid invoice will no longer receive reminders.</p></div></div>
+ <form method="post" action="/notifications/settings" class="form-grid">
+  <label>Advance reminder (days before due)<input type="number" name="days_before" min="0" max="28" value="{{ settings.days_before }}" required></label>
+  <label>First overdue reminder (days after due)<input type="number" name="first_overdue_days" min="1" max="90" value="{{ settings.first_overdue_days }}" required></label>
+  <label>Repeat overdue reminder every (days)<input type="number" name="repeat_every_days" min="1" max="90" value="{{ settings.repeat_every_days }}" required></label>
+  <label class="check-row"><input type="checkbox" name="send_on_due" {% if settings.send_on_due %}checked{% endif %}> Send on due date</label>
+  <label class="check-row"><input type="checkbox" name="enabled" {% if settings.enabled %}checked{% endif %}> Automation enabled</label>
+  <button class="button button-primary" type="submit">Save schedule</button>
+ </form>
+</section>
+{% if request.query_params.get('run') %}<section class="panel"><h2>Run result</h2>
+<p>Active invoices: {{ request.query_params.get('active', '0') }} · Newly created: {{ request.query_params.get('created', '0') }} · Eligible today: {{ request.query_params.get('eligible', '0') }} · Skipped: {{ request.query_params.get('skipped', '0') }} · Sent: {{ request.query_params.get('sent', '0') }} · Failed: {{ request.query_params.get('failed', '0') }}</p>
+{% if request.query_params.get('eligible', '0') == '0' %}<p class="muted">No resident invoice matched today's reminder schedule. Check resident due days and the schedule settings.</p>{% endif %}
+</section>{% endif %}
+{% if request.query_params.get('test') == 'sent' %}<section class="panel"><p>WhatsApp API accepted the test message. Message ID: {{ request.query_params.get('id') }}</p></section>{% elif request.query_params.get('test') == 'failed' %}<section class="panel"><p>WhatsApp test failed. Check terminal output or add API error details to the log.</p></section>{% endif %}
+<section class="panel">
+ <div class="panel-heading"><div><h2>Test WhatsApp independently</h2><p class="muted">Sends the approved template to your own opted-in number, without checking rent due dates.</p></div></div>
+ <form method="post" action="/notifications/test" class="inline-form"><input name="phone" placeholder="Your WhatsApp number, e.g. 919876543210" required><button class="button button-primary" type="submit">Send test WhatsApp</button></form>
+</section>
+<section class="panel">
+ <div class="panel-heading"><div><h2>Run a test cycle</h2><p class="muted">Checks today's due dates and attempts to send matching reminders.</p></div></div>
+ <form method="post" action="/notifications/run-now"><button class="button button-primary" type="submit">Run reminders now</button></form>
+ <p class="muted small">Configure WhatsApp Cloud API credentials before sending live messages. Without credentials, attempts are recorded as failed; no message is sent.</p>
+ <p class="muted small">Daily scheduler: 9:00 AM · Asia/Kolkata</p>
+</section>
+</div>
+<section class="panel">
+ <div class="panel-heading"><div><h2>Message activity</h2><p class="muted">Latest 100 reminder attempts</p></div></div>
+ <div class="table-wrap"><table><thead><tr><th>Resident</th><th>Type</th><th>Scheduled</th><th>Phone</th><th>Status</th><th>Details</th></tr></thead><tbody>
+ {% for log in logs %}<tr><td>{{ log.resident_id }}</td><td>{{ log.reminder_type }}</td><td>{{ log.scheduled_for.strftime('%d %b %Y') }}</td><td>{{ log.recipient }}</td><td><span class="status-pill">{{ log.status }}</span></td><td>{{ log.error or log.provider_message_id or '—' }}</td></tr>
+ {% else %}<tr><td colspan="6" class="empty-state">No reminder attempts yet.</td></tr>{% endfor %}
+ </tbody></table></div>
+</section>
+{% endblock %}

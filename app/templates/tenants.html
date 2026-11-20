@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}{% block heading %}Tenants{% endblock %}{% block content %}
+<div class="page-intro"><p>Register a tenant, assign a bed and start their monthly rent cycle from the joining date.</p></div>
+<section class="panel form-panel"><div class="panel-head"><div><h2>Add tenant</h2><p>First month's full rent is due immediately on joining.</p></div></div>
+<form method="post" action="/tenants" class="form-grid">
+<label>Full name<input name="full_name" placeholder="Tenant name" required></label>
+<label>Mobile number<input name="phone" placeholder="9876543210" required></label>
+<label>Joining date<input type="date" name="joining_date" value="{{ today_iso if today_iso else '' }}" required></label>
+<label>Monthly rent (₹)<input type="number" name="monthly_rent" min="1" step="0.01" placeholder="6500" required></label>
+<label>Room<select name="room_id" id="room-select" required><option value="">Choose room</option>{% for r in rooms %}<option value="{{r.id}}">{{r.property.name}} · {{r.room_number}} ({{r.beds|selectattr('status','equalto','Available')|list|length}} beds free)</option>{% endfor %}</select></label>
+<label>Available bed<select name="bed_id" id="bed-select" required><option value="">Choose bed</option>{% for r in rooms %}{% for b in r.beds if b.status=='Available' %}<option data-room="{{r.id}}" value="{{b.id}}">Room {{r.room_number}} · {{b.bed_number}}</option>{% endfor %}{% endfor %}</select></label>
+<button class="primary">Register tenant & create first rent cycle</button></form></section>
+<section class="panel"><div class="panel-head"><div><h2>Tenant directory</h2><p>{{active_count}} active · {{former_count}} checked out</p></div></div>
+<div class="tenant-filters">
+<a class="{{'selected' if status_filter=='All' else ''}}" href="/tenants?status=All">All ({{active_count + former_count}})</a>
+<a class="{{'selected' if status_filter=='Active' else ''}}" href="/tenants?status=Active">Active ({{active_count}})</a>
+<a class="{{'selected' if status_filter=='Inactive' else ''}}" href="/tenants?status=Inactive">Checked out ({{former_count}})</a>
+</div>
+<form method="get" action="/tenants" class="directory-filters">
+<input type="hidden" name="status" value="{{status_filter}}">
+<input type="search" name="q" value="{{search_query}}" placeholder="Search tenant name or phone">
+<select name="room_id"><option value="">All rooms</option>{% for r in rooms %}<option value="{{r.id}}" {{'selected' if selected_room_id==r.id else ''}}>{{r.property.name}} · {{r.room_number}}</option>{% endfor %}</select>
+<button class="primary small" type="submit">Apply filters</button>
+<a class="text-button" href="/tenants?status={{status_filter}}">Clear</a>
+</form>
+<div class="table-wrap"><table><thead><tr><th>Tenant</th><th>Contact</th><th>Room / Bed</th><th>Joining date</th><th>Monthly rent</th><th>Status</th><th>Checkout date</th><th></th></tr></thead><tbody>
+{% for t in tenants %}<tr><td><a href="/tenants/{{t.id}}" class="tenant-name"><b>{{t.full_name}}</b></a></td><td>{{t.phone}}</td><td>{{t.room.room_number if t.room else '—'}} / {{t.bed.bed_number if t.bed else '—'}}</td><td>{{t.joining_date.strftime('%d %b %Y') if t.joining_date else '—'}}</td><td>₹{{"{:,.0f}".format(t.monthly_rent)}}</td><td><span class="pill {{'good' if t.status=='Active' else ''}}">{{t.status}}</span></td><td>{{t.checkout_date.strftime('%d %b %Y') if t.checkout_date else '—'}}</td><td>{% if t.status=='Active' %}<form method="post" action="/tenants/{{t.id}}/checkout" onsubmit="return confirm('Check out this tenant?')"><button class="text-button">Check out</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="8" class="empty">No tenants match these filters.</td></tr>{% endfor %}</tbody></table></div></section>
+<script>
+const room=document.getElementById('room-select'), bed=document.getElementById('bed-select');
+function filterBeds(){for(const o of bed.options){if(!o.value)continue;o.hidden=o.dataset.room!==room.value;}bed.value='';}
+room.addEventListener('change',filterBeds);filterBeds();
+</script>{% endblock %}

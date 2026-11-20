@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block heading %}Tenant History{% endblock %}{% block content %}
+<div class="page-intro"><p><a href="/tenants">← Back to tenants</a></p></div>
+<section class="panel">
+<div class="panel-head"><div><h2>{{tenant.full_name}}</h2><p>{{tenant.phone}} · {{tenant.status}}</p></div><div style="display:flex;gap:12px;align-items:center"><a class="button-link" href="/tenants/{{tenant.id}}/edit">Edit tenant</a><span class="pill {{'good' if tenant.status=='Active' else ''}}">{{tenant.status}}</span></div></div>
+<div class="history-summary">
+<div><span>Room / Bed</span><b>{{tenant.room.room_number if tenant.room else '—'}} / {{tenant.bed.bed_number if tenant.bed else '—'}}</b></div>
+<div><span>Joined</span><b>{{tenant.joining_date.strftime('%d %b %Y') if tenant.joining_date else '—'}}</b></div>
+<div><span>Checked out</span><b>{{tenant.checkout_date.strftime('%d %b %Y') if tenant.checkout_date else '—'}}</b></div>
+<div><span>Monthly rent</span><b>₹{{"{:,.2f}".format(tenant.monthly_rent)}}</b></div>
+</div></section>
+<section class="metrics history-metrics">
+<div class="metric"><span>Total rent paid</span><strong>₹{{"{:,.2f}".format(total_paid)}}</strong><small>Payments recorded against rent cycles</small></div>
+<div class="metric"><span>Outstanding balance</span><strong>₹{{"{:,.2f}".format(outstanding)}}</strong><small>Remaining balance across all cycles</small></div>
+<div class="metric"><span>Rent cycles</span><strong>{{cycles|length}}</strong><small>Generated billing periods</small></div>
+</section>
+<section class="panel"><div class="panel-head"><div><h2>Rent & payment history</h2><p>Each rent cycle and payments recorded against it</p></div></div>
+<div class="table-wrap"><table><thead><tr><th>Cycle</th><th>Due date</th><th>Rent</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>
+{% for c in cycles %}{% set paid = namespace(value=0) %}{% for p in c.payments %}{% set paid.value = paid.value + p.amount %}{% endfor %}
+<tr><td>{{c.cycle_number}}</td><td>{{c.due_date.strftime('%d %b %Y')}}</td><td>₹{{"{:,.2f}".format(c.amount)}}</td><td>₹{{"{:,.2f}".format(paid.value)}}</td><td>₹{{"{:,.2f}".format([c.amount-paid.value,0]|max)}}</td><td><span class="pill {{'good' if paid.value >= c.amount else ''}}">{{'Paid' if paid.value >= c.amount else ('Partially paid' if paid.value > 0 else c.status)}}</span></td></tr>
+{% else %}<tr><td colspan="6" class="empty">No rent cycles recorded.</td></tr>{% endfor %}
+</tbody></table></div></section>
+<section class="panel"><div class="panel-head"><div><h2>Payment transactions</h2><p>Individual payment entries</p></div></div>
+<div class="table-wrap"><table><thead><tr><th>Date</th><th>Rent cycle</th><th>Amount</th><th>Method</th><th>Reference</th></tr></thead><tbody>
+{% for c in cycles %}{% for p in c.payments %}<tr><td>{{p.paid_on.strftime('%d %b %Y')}}</td><td>{{c.cycle_number}}</td><td>₹{{"{:,.2f}".format(p.amount)}}</td><td>{{p.method}}</td><td>{{p.reference or '—'}}</td></tr>{% endfor %}{% endfor %}
+{% if not total_paid %}<tr><td colspan="5" class="empty">No payment transactions recorded.</td></tr>{% endif %}
+</tbody></table></div></section>{% endblock %}

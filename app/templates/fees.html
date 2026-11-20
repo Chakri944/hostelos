@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block heading %}Fees & Payments{% endblock %}{% block content %}
+<div class="page-intro"><p>Update each rent cycle as <b>Paid</b> or <b>Not Paid</b> after collecting rent.</p></div>
+<section class="panel"><div class="panel-head"><div><h2>Unpaid rent cycles</h2><p>Search by tenant name or phone, or narrow the list to a room.</p></div></div>
+<form method="get" action="/fees" class="directory-filters">
+<input type="search" name="q" value="{{search_query}}" placeholder="Search tenant name or phone">
+<select name="room_id"><option value="">All rooms</option>{% for r in rooms %}<option value="{{r.id}}" {{'selected' if selected_room_id==r.id else ''}}>{{r.room_number}}</option>{% endfor %}</select>
+<button class="primary small" type="submit">Apply filters</button>
+<a class="text-button" href="/fees">Clear</a>
+</form>
+<div class="table-wrap"><table><thead><tr><th>Tenant</th><th>Cycle</th><th>Due date</th><th>Rent</th><th>Paid</th><th>Balance</th><th>Status</th><th>Update status</th></tr></thead><tbody>
+{% for row in rows %}{% set c=row.cycle %}<tr>
+<td><b>{{c.resident.full_name}}</b><small>{{c.resident.room.room_number if c.resident.room else '—'}}</small></td>
+<td>{{c.cycle_number}}</td><td>{{c.due_date.strftime('%d %b %Y')}}</td>
+<td>₹{{"{:,.2f}".format(c.amount)}}</td><td>₹{{"{:,.2f}".format(c.amount-row.balance)}}</td>
+<td><b>₹{{"{:,.2f}".format(row.balance)}}</b></td>
+<td><span class="payment-state unpaid"><span class="state-dot"></span>Not Paid</span></td>
+<td><form class="fee-status-form" method="post" action="/fees/{{c.id}}/status">
+<select name="status" aria-label="Payment status for {{c.resident.full_name}}"><option value="Paid">Paid</option><option value="Not Paid" selected>Not Paid</option></select>
+<button class="primary small">Update</button></form></td></tr>
+{% else %}<tr><td colspan="8" class="empty">No unpaid rent cycles match these filters.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

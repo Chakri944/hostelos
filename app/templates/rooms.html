@@ -1,0 +1,14 @@
+
+{% extends "base.html" %}{% block heading %}Rooms & Beds{% endblock %}{% block content %}
+<div class="page-intro"><p>Create floors, rooms and beds. Bed availability updates when a tenant checks in or out.</p></div>
+<section class="panel form-panel"><div class="panel-head"><div><h2>Add a room</h2><p>Beds are created automatically from capacity.</p></div></div>
+<form method="post" action="/rooms" class="form-grid">
+<label>Hostel<select name="property_id" required>{% for p in properties %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}</select></label>
+<label>Floor<input name="floor_name" placeholder="First Floor" value="Ground Floor" required></label>
+<label>Room number<input name="room_number" placeholder="101" required></label>
+<label>Room type<select name="room_type"><option>Shared</option><option>Private</option><option>AC</option><option>Non-AC</option></select></label>
+<label>Number of beds<input type="number" name="capacity" min="1" max="20" value="3" required></label><button class="primary">Create room & beds</button></form></section>
+<div class="room-grid">{% for r in rooms %}<section class="panel room-card"><div class="panel-head"><div><h2>Room {{r.room_number}}</h2><p>{{r.property.name}} · {{r.floor.name if r.floor else "Floor not set"}} · {{r.room_type}}</p></div><span class="count">{{r.beds|selectattr('status','equalto','Occupied')|list|length}} / {{r.capacity}}</span></div>
+<div class="beds">{% for b in r.beds %}<div class="bed {{'occupied' if b.status=='Occupied' else ''}}"><span>▰</span><b>{{b.bed_number}}</b><small>{{b.status}}</small></div>{% endfor %}</div>
+{% if not r.residents|selectattr('status','equalto','Active')|list %}<form method="post" action="/rooms/{{r.id}}/delete" onsubmit="return confirm('Delete this room?')"><button class="text-button danger">Delete room</button></form>{% endif %}</section>{% else %}<div class="panel empty">No rooms yet. Add your first room above.</div>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title or "HostelOS" }}</title><link rel="stylesheet" href="/static/styles.css"></head><body>
+<div class="shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">H</span><div><b>HostelOS</b><small>HOSTEL ADMIN</small></div></div>
+<nav><a class="{{'active' if active_page=='dashboard' else ''}}" href="/">▦ <span>Dashboard</span></a>
+<a class="{{'active' if active_page=='rooms' else ''}}" href="/rooms">▤ <span>Rooms & Beds</span></a>
+<a class="{{'active' if active_page=='tenants' else ''}}" href="/tenants">♙ <span>Tenants</span></a>
+<a class="{{'active' if active_page=='fees' else ''}}" href="/fees">₹ <span>Fees & Payments</span></a><a class="{{'active' if active_page=='backup' else ''}}" href="/backup">▣ <span>Backup & Restore</span></a></nav>
+<div class="side-note"><span class="dot"></span> Owner workspace</div>
+<form method="post" action="/logout" class="sidebar-logout"><button type="submit">Sign out</button></form></aside>
+<main class="main"><header class="topbar"><div><span class="muted">HOSTEL MANAGEMENT</span><h1>{% block heading %}Dashboard{% endblock %}</h1></div><div class="top-date">{{ today.strftime('%d %b %Y') if today is defined else "" }}</div></header>
+{% block content %}{% endblock %}<footer>HostelOS · Simple rent and tenant management</footer></main></div></body></html>

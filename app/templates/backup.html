@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block heading %}Backup & Restore{% endblock %}{% block content %}
+<div class="page-intro"><p>Protect your tenant records, room assignments, rent cycles and payment history.</p></div>
+{% if cloud_database %}
+<div class="notice warning">HostelOS is connected to cloud PostgreSQL. Local SQLite backup and restore are disabled here. Use your database provider's backup and recovery controls for cloud backups.</div>
+{% else %}
+{% if request.query_params.get('restored') == '1' %}<div class="notice success">Database restored successfully. Refresh the app to view the restored records.</div>{% elif request.query_params.get('error') %}<div class="notice error">Restore failed. Check that you selected a valid HostelOS SQLite backup.</div>{% endif %}
+<section class="panel backup-panel"><div class="panel-head"><div><h2>Download a backup</h2><p>Create a consistent snapshot of your current HostelOS database.</p></div></div>
+<p>Includes tenant details, rooms and beds, rent cycles, payment history and checkout records.</p><a class="primary button-link" href="/backup/download">Download database backup</a></section>
+<section class="panel backup-panel"><div class="panel-head"><div><h2>Restore from a backup</h2><p>Replace the current database with a previously downloaded HostelOS backup.</p></div></div>
+<div class="notice warning"><b>Important:</b> Restoring replaces current data. A safety copy is created before replacement.</div>
+<form method="post" action="/backup/restore" enctype="multipart/form-data" class="restore-form" onsubmit="return confirm('Restore this backup? Current data will be replaced. A safety copy will be created first.')">
+<label>Select backup file<input type="file" name="file" accept=".db,.sqlite,.sqlite3" required></label><button class="primary" type="submit">Validate & restore backup</button></form>
+<p class="muted">Only valid SQLite backups are accepted. Maximum file size: 100 MB.</p></section>
+{% endif %}
+{% endblock %}

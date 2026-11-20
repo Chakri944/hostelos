@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block heading %}Edit Tenant{% endblock %}{% block content %}
+<div class="page-intro"><p><a href="/tenants/{{tenant.id}}">← Back to tenant history</a></p></div>
+<section class="panel form-panel">
+<div class="panel-head"><div><h2>Edit {{tenant.full_name}}</h2><p>Update contact details, rent and room assignment without recreating the tenant.</p></div></div>
+{% if request.query_params.get('error') == 'invalid' %}<p class="form-error">Enter a valid name, 10-digit mobile number and rent greater than zero.</p>{% elif request.query_params.get('error') == 'bed' %}<p class="form-error">That bed is no longer available. Please choose another available bed.</p>{% endif %}
+<form method="post" action="/tenants/{{tenant.id}}/edit" class="form-grid">
+<label>Full name<input name="full_name" value="{{tenant.full_name}}" required></label>
+<label>Mobile number<input name="phone" value="{{tenant.phone}}" required></label>
+<label>Monthly rent (₹)<input type="number" name="monthly_rent" min="1" step="0.01" value="{{tenant.monthly_rent}}" required></label>
+{% if tenant.status == 'Active' %}
+<label>Room<select name="room_id" id="edit-room" required>{% for r in rooms %}<option value="{{r.id}}" {{'selected' if tenant.room_id==r.id else ''}}>{{r.property.name}} · {{r.room_number}}</option>{% endfor %}</select></label>
+<label>Bed<select name="bed_id" id="edit-bed" required>{% for b in available_beds %}<option data-room="{{b.room_id}}" value="{{b.id}}" {{'selected' if tenant.bed_id==b.id else ''}}>Room {{b.room_number}} · {{b.bed_number}}</option>{% endfor %}</select></label>
+{% else %}
+<p class="muted">This tenant has checked out. Room and bed assignment cannot be changed.</p>
+{% endif %}
+<button class="primary">Save changes</button>
+</form>
+<p class="muted" style="margin-top:14px">Rent changes apply only to future rent cycles that have not started and have no payments. Existing rent and payment history remains unchanged. Joining date is kept as originally recorded.</p>
+</section>
+{% if tenant.status == 'Active' %}
+<script>
+const roomSelect=document.getElementById('edit-room'), bedSelect=document.getElementById('edit-bed');
+function filterEditBeds(){for(const option of bedSelect.options){option.hidden=option.dataset.room!==roomSelect.value;}if(bedSelect.selectedOptions.length && bedSelect.selectedOptions[0].hidden){bedSelect.value='';}}
+roomSelect.addEventListener('change',filterEditBeds);filterEditBeds();
+</script>
+{% endif %}
+{% endblock %}

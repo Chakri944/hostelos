@@ -1,0 +1,18 @@
+
+{% extends "base.html" %}{% block heading %}Dashboard{% endblock %}{% block content %}
+<section class="metrics">
+<div class="metric"><span>This month's collections</span><strong>₹{{ "{:,.2f}".format(collected) }}</strong><small>Payments received this month</small></div>
+<div class="metric"><span>Outstanding dues</span><strong>₹{{ "{:,.2f}".format(dues) }}</strong><small>All unpaid rent cycle balances</small></div>
+<div class="metric"><span>Total tenants</span><strong>{{ tenants }}</strong><small>Currently active</small></div>
+<div class="metric"><span>Fees due</span><strong>{{ fees_due }}</strong><small>Due today or overdue cycles</small></div>
+</section>
+<div class="two-col"><section class="panel"><div class="panel-head"><div><h2>Upcoming rent</h2><p>Next tenant payment dates</p></div><a href="/fees">View all</a></div>
+<table><thead><tr><th>Tenant</th><th>Due date</th><th>Amount</th></tr></thead><tbody>
+{% for c in upcoming %}<tr><td><b>{{ c.resident.full_name }}</b><small>{{ c.resident.room.room_number if c.resident.room else "—" }}</small></td><td>{{ c.due_date.strftime('%d %b %Y') }}</td><td>₹{{ "{:,.0f}".format(c.amount) }}</td></tr>{% else %}<tr><td colspan="3" class="empty">No upcoming cycles</td></tr>{% endfor %}
+</tbody></table></section>
+<section class="panel"><div class="panel-head"><div><h2>Recent collections</h2><p>Latest payments recorded</p></div><a href="/fees">Manage fees</a></div>
+<table><thead><tr><th>Tenant</th><th>Date</th><th>Amount</th></tr></thead><tbody>
+{% for p in recent %}<tr><td><b>{{ p.resident.full_name }}</b><small>{{ p.method }}</small></td><td>{{ p.paid_on.strftime('%d %b') }}</td><td>₹{{ "{:,.0f}".format(p.amount) }}</td></tr>{% else %}<tr><td colspan="3" class="empty">No payments recorded yet</td></tr>{% endfor %}
+</tbody></table></section></div>
+<div class="quick-links"><a href="/tenants">＋ Add tenant</a><a href="/rooms">＋ Add room</a><a href="/fees">＋ Record payment</a></div>
+{% endblock %}
